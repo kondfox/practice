@@ -21,6 +21,10 @@ const node = (x, y) => {
   return `[${x}, ${y}]`;
 }
 
+const coordinate = (node) => {
+  return [+node[1], +node[4]];
+}
+
 const findNeighbours = (x, y, map) => {
   return [[-1, 0], [1, 0], [0, -1], [0, 1]]
     .map(i => (map[x + i[0]] && map[x + i[0]][y + i[1]]) ? node(x + i[0], y + i[1]) : null)
@@ -52,7 +56,7 @@ const reconstractPath = (previousNodes, from, to) => {
   let actual = to;
 
   while (actual !== from) {
-    path.unshift(actual);
+    path.unshift(coordinate(actual));
     actual = previousNodes[actual];
   }
 
@@ -72,8 +76,8 @@ const map = [
   [1, 1, 1, 0, 1, 0, 0, 1, 1, 1]
 ];
 
-console.log(findNeighbours(1, 1, map));
+// console.log(findNeighbours(1, 1, map));
 
 
-// const sp = findShortestPath(map, [0, 0], [3, 7]);
-// console.log(sp);
+const sp = findShortestPath(map, [0, 0], [3, 7]);
+console.log(sp);
