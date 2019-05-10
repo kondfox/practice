@@ -76,8 +76,5 @@ const map = [
   [1, 1, 1, 0, 1, 0, 0, 1, 1, 1]
 ];
 
-// console.log(findNeighbours(1, 1, map));
-
-
 const sp = findShortestPath(map, [0, 0], [3, 7]);
 console.log(sp);
