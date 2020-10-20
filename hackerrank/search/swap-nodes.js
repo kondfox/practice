@@ -1,80 +1,96 @@
-'use strict';
-
-const leftChildIndex = i => i * 2 + 1;
-const rightChildIndex = i => i * 2 + 2;
-const parentIndex = i => Math.floor((i + 1) / 2) - 1;
-const leftChild = (arr, i) => arr[leftChildIndex(i)];
-const rightChild = (arr, i) => arr[rightChildIndex(i)];
-const parent = (arr, i) => arr[parentIndex(i)];
-const treeHeight = nodes => Math.ceil(Math.log2(nodes + 1));
-const hasLeftChild = (arr, i) => arr[leftChildIndex(i)] > -1;
-const hasRightChild = (arr, i) => arr[rightChildIndex(i)] > -1;
-
 function swapNodes(indexes, queries) {
-    const tree = constructTree(indexes);
-    return queries.map(q => inOrder(executeQuery(tree, q)));
+  const tree = constructTree(indexes);
+  return queries.map((q) => inOrder(swap(tree, q)));
 }
 
-function executeQuery(tree, q) {
-    let i = 1;
-    while (q * i < treeHeight(tree.length)) {
-        swapLevel(tree, q * i++);
+function swap(tree, q) {
+  const queue = [tree[0]];
+  while (queue.length > 0) {
+    const node = queue.shift();
+    if (node.level % q == 0) {
+      const temp = node.left;
+      node.left = node.right;
+      node.right = temp;
     }
-    return tree;
+    if (node.left) queue.push(node.left);
+    if (node.right) queue.push(node.right);
+  }
+  return tree;
 }
 
-function swapLevel(tree, level) {
-    const startIndex = Math.pow(2, level) - 1;
-    for (let i = startIndex; i < tree.length;) {
-        const swapArrSize = Math.pow(2, treeHeight(i + 1) - level - 1);
-        const firstArr = tree.slice(i, i + swapArrSize);
-        const secondArr = tree.slice(i + swapArrSize, i + 2 * swapArrSize);
-        tree.splice(i, swapArrSize, ...secondArr);
-        tree.splice(i + swapArrSize, swapArrSize, ...firstArr);
-        i += swapArrSize * 2
+function* idGenerator() {
+  for (let i = 0; i < 1024; i++) {
+    yield i;
+  }
+}
+
+function inOrder(tree) {
+  const nodes = Object.keys(tree).length;
+  const traversal = [];
+  const done = {};
+  let i = 0;
+  while (traversal.length < nodes) {
+    if (tree[i].left && !done[tree[i].left.id]) {
+      i = tree[i].left.id;
+    } else if (tree[i].right && !done[tree[i].right.id]) {
+      traversal.push(tree[i].val);
+      done[i] = 1;
+      i = tree[i].right.id;
+    } else {
+      if (!done[i]) {
+        traversal.push(tree[i].val);
+        done[i] = 1;
+      }
+      i = tree[i].parent;
     }
-    return tree;
-}
-
-function inOrder(tree, inOrderArr = [], done = {}, i = 0) {
-  if (tree.length === 1) return tree;
-  if (i === 0 && done[leftChildIndex(i)] && done[rightChildIndex(i)]) {
-    return inOrderArr;
   }
-  if (hasLeftChild(tree, i) && !done[leftChildIndex(i)]) {
-    return inOrder(tree, inOrderArr, done, leftChildIndex(i));
-  } else {
-    const isUndoneRightChild = hasRightChild(tree, i) && !done[rightChildIndex(i)];
-    const nextIndex = isUndoneRightChild ? rightChildIndex(i) : parentIndex(i);
-    const newInOrderArr = done[i] ? inOrderArr : [...inOrderArr, tree[i]];
-    const newDone = done[i] ? done : Object.assign(done, { [i]: 1 });
-    return inOrder(tree, newInOrderArr, newDone, nextIndex);
-  }
+  return traversal;
 }
 
 function constructTree(indexes) {
-    const tree = [1];
-    for (let i = 0, j = 1; i < indexes.length; j += 2) {
-        if (parent(tree, j) > -1) { tree.push(...indexes[i++]); }
-        else { tree.push(-1, -1); }
-    }
-    return tree;
+  const idGen = idGenerator();
+  const tree = {};
+  let node = { id: idGen.next().value, val: 1, level: 1 };
+  tree[node.id] = node;
+  const nodes = [node];
+  for (let i = 0; i < indexes.length; i++) {
+    const parent = nodes.shift();
+    const [left, right] = indexes[i];
+    const lN = addNode(tree, nodes, parent, left, "left", idGen);
+    const rN = addNode(tree, nodes, parent, right, "right", idGen);
+  }
+  return tree;
 }
 
-const indexes = [
+function addNode(tree, nodes, parent, value, side, idGen) {
+  const node = { val: value, parent: parent.id, level: parent.level + 1 };
+  if (value > -1) {
+    nodes.push(node);
+    node.id = idGen.next().value;
+    tree[node.id] = node;
+    parent[side] = node;
+  }
+  return node;
+}
+
+const n = [
   [2, 3],
-  [4, -1],
-  [5, -1],
+  [4, 5],
   [6, -1],
-  [7, 8],
-  [-1, 9],
-  [-1, -1],
+  [-1, 7],
+  [8, 9],
   [10, 11],
+  [12, 13],
+  [-1, 14],
+  [-1, -1],
+  [15, -1],
+  [16, 17],
   [-1, -1],
   [-1, -1],
-  [-1, -1]
+  [-1, -1],
+  [-1, -1],
+  [-1, -1],
+  [-1, -1],
 ];
-const queries = [2, 4];
-console.log(swapNodes(indexes, queries));
-// console.log(inOrder([1,2,3,4,-1,5,-1]));
-// console.log(inOrder([1,2,3,-1,4,-1,5,-1,-1,6,-1,-1,-1,7,8,-1,-1,-1,-1,-1,9,-1,-1,-1,-1,-1,-1,-1,-1,10,11]));
+const q = [2, 3];
+console.log(swapNodes(n, q));
